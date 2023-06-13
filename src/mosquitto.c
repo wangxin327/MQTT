@@ -189,11 +189,11 @@ void listeners__reload_all_certificates(void)
 
 	for(i=0; i<db.config->listener_count; i++){
 		listener = &db.config->listeners[i];
-		if(listener->ssl_ctx && listener->certfile && listener->keyfile){
+		if(listener->ssl_ctx && listener->certfile && listener->keyfile && listener->enc_certfile && listener->enc_keyfile){
 			rc = net__load_certificates(listener);
 			if(rc){
-				log__printf(NULL, MOSQ_LOG_ERR, "Error when reloading certificate '%s' or key '%s'.",
-						listener->certfile, listener->keyfile);
+				log__printf(NULL, MOSQ_LOG_ERR, "Error when reloading certificate '%s' or key '%s' or certificate '%s' or key '%s'.",
+						listener->certfile, listener->keyfile,listener->enc_certfile, listener->enc_keyfile);
 			}
 		}
 	}

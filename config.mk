@@ -82,7 +82,7 @@ WITH_SOCKS:=yes
 WITH_STRIP:=no
 
 # Build static libraries
-WITH_STATIC_LIBRARIES:=no
+WITH_STATIC_LIBRARIES:=yes
 
 # Use this variable to add extra library dependencies when building the clients
 # with the static libmosquitto library. This may be required on some systems
@@ -108,7 +108,7 @@ WITH_COVERAGE:=no
 WITH_UNIX_SOCKETS:=yes
 
 # Build mosquitto_sub with cJSON support
-WITH_CJSON:=yes
+WITH_CJSON:=no
 
 # Build mosquitto with support for the $CONTROL topics.
 WITH_CONTROL:=yes
@@ -144,14 +144,14 @@ ARCH:=$(shell uname -p)
 
 ifeq ($(UNAME),SunOS)
 	ifeq ($(CC),cc)
-		CFLAGS?=-O
+		CFLAGS?=-O -I/root/tassl/include/openssl
 	else
-		CFLAGS?=-Wall -ggdb -O2
+		CFLAGS?=-Wall -ggdb -O2 -I/root/tassl/include/openssl
 	endif
 else
-	CFLAGS?=-Wall -ggdb -O2 -Wconversion -Wextra
+	CFLAGS?=-Wall -ggdb -O2 -Wconversion -Wextra -I/root/tassl/include/openssl
 endif
-
+LDFLAGS:= -pthread /root/tassl/lib/libssl.a /root/tassl/lib/libcrypto.a -lrt
 STATIC_LIB_DEPS:=
 
 APP_CPPFLAGS=$(CPPFLAGS) -I. -I../../ -I../../include -I../../src -I../../lib
@@ -196,7 +196,7 @@ ifeq ($(UNAME),Linux)
 endif
 
 ifeq ($(WITH_SHARED_LIBRARIES),yes)
-	CLIENT_LDADD:=${CLIENT_LDADD} ../lib/libmosquitto.so.${SOVERSION}
+	CLIENT_LDADD:=${CLIENT_LDADD} ../lib/libmosquitto.so.$(SOVERSION) -ldl
 endif
 
 ifeq ($(UNAME),SunOS)
@@ -223,7 +223,7 @@ else
 endif
 
 ifneq ($(UNAME),SunOS)
-	LIB_LDFLAGS:=$(LIB_LDFLAGS) -Wl,--version-script=linker.version -Wl,-soname,libmosquitto.so.$(SOVERSION)
+	LIB_LDFLAGS:=$(LIB_LDFLAGS) -Wl,--version-script=linker.version -Wl,-soname,libmosquitto.so.$(SOVERSION) -ldl
 endif
 
 ifeq ($(UNAME),QNX)
@@ -239,12 +239,12 @@ endif
 ifeq ($(WITH_TLS),yes)
 	APP_CPPFLAGS:=$(APP_CPPFLAGS) -DWITH_TLS
 	BROKER_CPPFLAGS:=$(BROKER_CPPFLAGS) -DWITH_TLS
-	BROKER_LDADD:=$(BROKER_LDADD) -lssl -lcrypto
-	CLIENT_CPPFLAGS:=$(CLIENT_CPPFLAGS) -DWITH_TLS
-	LIB_CPPFLAGS:=$(LIB_CPPFLAGS) -DWITH_TLS
-	LIB_LIBADD:=$(LIB_LIBADD) -lssl -lcrypto
-	PASSWD_LDADD:=$(PASSWD_LDADD) -lcrypto
-	STATIC_LIB_DEPS:=$(STATIC_LIB_DEPS) -lssl -lcrypto
+	BROKER_LDADD:=$(BROKER_LDADD) /root/tassl/lib/libssl.a /root/tassl/lib/libcrypto.a -ldl
+	CLIENT_CPPFLAGS:=$(CLIENT_CPPFLAGS) -DWITH_TLS -ldl
+	LIB_CPPFLAGS:=$(LIB_CPPFLAGS) -DWITH_TLS -ldl
+	LIB_LIBADD:=$(LIB_LIBADD) /root/tassl/lib/libssl.a /root/tassl/lib/libcrypto.a
+	PASSWD_LDADD:=$(PASSWD_LDADD) /root/tassl/lib/libssl.a /root/tassl/lib/libcrypto.a -ldl
+	STATIC_LIB_DEPS:=$(STATIC_LIB_DEPS) /root/tassl/lib/libssl.a /root/tassl/lib/libcrypto.a
 
 	ifeq ($(WITH_TLS_PSK),yes)
 		BROKER_CPPFLAGS:=$(BROKER_CPPFLAGS) -DWITH_TLS_PSK

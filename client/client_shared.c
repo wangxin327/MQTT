@@ -225,6 +225,8 @@ void client_config_cleanup(struct mosq_config *cfg)
 	free(cfg->capath);
 	free(cfg->certfile);
 	free(cfg->keyfile);
+	free(cfg->enc_certfile);
+	free(cfg->enc_keyfile);
 	free(cfg->ciphers);
 	free(cfg->tls_alpn);
 	free(cfg->tls_version);
@@ -389,7 +391,7 @@ int client_config_load(struct mosq_config *cfg, int pub_or_sub, int argc, char *
 		return 1;
 	}
 #ifdef WITH_TLS
-	if((cfg->certfile && !cfg->keyfile) || (cfg->keyfile && !cfg->certfile)){
+	if((cfg->certfile && !cfg->keyfile) || (cfg->keyfile && !cfg->certfile)||(cfg->enc_certfile && !cfg->enc_keyfile) || (cfg->enc_keyfile && !cfg->enc_certfile)){
 		fprintf(stderr, "Error: Both certfile and keyfile must be provided if one of them is set.\n");
 		return 1;
 	}
@@ -561,6 +563,14 @@ int client_config_line_proc(struct mosq_config *cfg, int pub_or_sub, int argc, c
 				cfg->certfile = strdup(argv[i+1]);
 			}
 			i++;
+		}else if(!strcmp(argv[i], "--enc_cert")){
+			if(i==argc-1){
+				fprintf(stderr, "Error: --enc_cert argument given but no file specified.\n\n");
+				return 1;
+			}else{
+				cfg->enc_certfile = strdup(argv[i+1]);
+			}
+			i++;
 		}else if(!strcmp(argv[i], "--ciphers")){
 			if(i==argc-1){
 				fprintf(stderr, "Error: --ciphers argument given but no ciphers specified.\n\n");
@@ -708,6 +718,14 @@ int client_config_line_proc(struct mosq_config *cfg, int pub_or_sub, int argc, c
 				return 1;
 			}else{
 				cfg->keyfile = strdup(argv[i+1]);
+			}
+			i++;
+		}else if(!strcmp(argv[i], "--enc_key")){
+			if(i==argc-1){
+				fprintf(stderr, "Error: --enc_key argument given but no file specified.\n\n");
+				return 1;
+			}else{
+				cfg->enc_keyfile = strdup(argv[i+1]);
 			}
 			i++;
 		}else if(!strcmp(argv[i], "--keyform")){
@@ -1253,7 +1271,7 @@ int client_opts_set(struct mosquitto *mosq, struct mosq_config *cfg)
 	}
 #ifdef WITH_TLS
 	if(cfg->cafile || cfg->capath){
-		rc = mosquitto_tls_set(mosq, cfg->cafile, cfg->capath, cfg->certfile, cfg->keyfile, NULL);
+		rc = mosquitto_tls_set(mosq, cfg->cafile, cfg->capath, cfg->certfile, cfg->keyfile,cfg->enc_certfile,cfg->enc_keyfile, NULL);
 		if(rc){
 			if(rc == MOSQ_ERR_INVAL){
 				err_printf(cfg, "Error: Problem setting TLS options: File not found.\n");

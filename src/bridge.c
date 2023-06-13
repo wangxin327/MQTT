@@ -105,6 +105,8 @@ int bridge__new(struct mosquitto__bridge *bridge)
 	new_context->tls_capath = new_context->bridge->tls_capath;
 	new_context->tls_certfile = new_context->bridge->tls_certfile;
 	new_context->tls_keyfile = new_context->bridge->tls_keyfile;
+	new_context->tls_enc_certfile = new_context->bridge->tls_enc_certfile;
+	new_context->tls_enc_keyfile = new_context->bridge->tls_enc_keyfile;
 	new_context->tls_cert_reqs = SSL_VERIFY_PEER;
 	new_context->tls_ocsp_required = new_context->bridge->tls_ocsp_required;
 	new_context->tls_version = new_context->bridge->tls_version;

@@ -279,6 +279,8 @@ void config__cleanup(struct mosquitto__config *config)
 			mosquitto__free(config->listeners[i].capath);
 			mosquitto__free(config->listeners[i].certfile);
 			mosquitto__free(config->listeners[i].keyfile);
+			mosquitto__free(config->listeners[i].enc_certfile);
+			mosquitto__free(config->listeners[i].enc_keyfile);
 			mosquitto__free(config->listeners[i].ciphers);
 			mosquitto__free(config->listeners[i].ciphers_tls13);
 			mosquitto__free(config->listeners[i].psk_hint);
@@ -427,6 +429,8 @@ int config__parse_args(struct mosquitto__config *config, int argc, char *argv[])
 			|| config->default_listener.capath
 			|| config->default_listener.certfile
 			|| config->default_listener.keyfile
+			|| config->default_listener.enc_certfile
+			|| config->default_listener.enc_keyfile
 			|| config->default_listener.tls_engine
 			|| config->default_listener.tls_keyform != mosq_k_pem
 			|| config->default_listener.tls_engine_kpass_sha1
@@ -495,6 +499,8 @@ int config__parse_args(struct mosquitto__config *config, int argc, char *argv[])
 		config->listeners[config->listener_count-1].capath = config->default_listener.capath;
 		config->listeners[config->listener_count-1].certfile = config->default_listener.certfile;
 		config->listeners[config->listener_count-1].keyfile = config->default_listener.keyfile;
+		config->listeners[config->listener_count-1].enc_certfile = config->default_listener.enc_certfile;
+		config->listeners[config->listener_count-1].enc_keyfile = config->default_listener.enc_keyfile;
 		config->listeners[config->listener_count-1].ciphers = config->default_listener.ciphers;
 		config->listeners[config->listener_count-1].ciphers_tls13 = config->default_listener.ciphers_tls13;
 		config->listeners[config->listener_count-1].dhparamfile = config->default_listener.dhparamfile;
@@ -1173,6 +1179,13 @@ static int config__read_file_core(struct mosquitto__config *config, bool reload,
 #else
 					log__printf(NULL, MOSQ_LOG_WARNING, "Warning: TLS support not available.");
 #endif
+				}else if(!strcmp(token, "enc_certfile")){
+#ifdef WITH_TLS
+					if(reload) continue; /* Listeners not valid for reloading. */
+					if(conf__parse_string(&token, "enc_certfile", &cur_listener->enc_certfile, saveptr)) return MOSQ_ERR_INVAL;
+#else
+					log__printf(NULL, MOSQ_LOG_WARNING, "Warning: TLS support not available(no enc_certfile).");
+#endif
 				}else if(!strcmp(token, "check_retain_source")){
 					conf__set_cur_security_options(config, cur_listener, &cur_security_options);
 					if(conf__parse_bool(&token, "check_retain_source", &config->check_retain_source, saveptr)) return MOSQ_ERR_INVAL;
@@ -1372,6 +1385,13 @@ static int config__read_file_core(struct mosquitto__config *config, bool reload,
 					if(conf__parse_string(&token, "keyfile", &cur_listener->keyfile, saveptr)) return MOSQ_ERR_INVAL;
 #else
 					log__printf(NULL, MOSQ_LOG_WARNING, "Warning: TLS support not available.");
+#endif
+				}else if(!strcmp(token, "enc_keyfile")){
+#ifdef WITH_TLS
+					if(reload) continue; /* Listeners not valid for reloading. */
+					if(conf__parse_string(&token, "enc_keyfile", &cur_listener->enc_keyfile, saveptr)) return MOSQ_ERR_INVAL;
+#else
+					log__printf(NULL, MOSQ_LOG_WARNING, "Warning: TLS support not available(no enc_keyfile).");
 #endif
 				}else if(!strcmp(token, "listener")){
 					config->local_only = false;

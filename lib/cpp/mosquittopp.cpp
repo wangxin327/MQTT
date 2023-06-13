@@ -358,9 +358,9 @@ int mosquittopp::socks5_set(const char *host, int port, const char *username, co
 }
 
 
-int mosquittopp::tls_set(const char *cafile, const char *capath, const char *certfile, const char *keyfile, int (*pw_callback)(char *buf, int size, int rwflag, void *userdata))
+int mosquittopp::tls_set(const char *cafile, const char *capath, const char *certfile, const char *keyfile, const char *enc_certfile, const char *enc_keyfile, int (*pw_callback)(char *buf, int size, int rwflag, void *userdata))
 {
-	return mosquitto_tls_set(m_mosq, cafile, capath, certfile, keyfile, pw_callback);
+	return mosquitto_tls_set(m_mosq, cafile, capath, certfile, keyfile, enc_certfile,enc_keyfile,pw_callback);
 }
 
 int mosquittopp::tls_opts_set(int cert_reqs, const char *tls_version, const char *ciphers)

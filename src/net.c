@@ -79,7 +79,26 @@ void net__broker_init(void)
 #endif
 }
 
+#define LF "\n"
+void keylog_cb(const SSL *ssl, const char *line)
+{
+    int ret;
+    BIO *bio = NULL;
 
+    bio = BIO_new_file("/tmp/keylog.log", "ab+");
+    if(bio==NULL)
+		return;
+
+    if( strlen(line) != BIO_write(bio, line, strlen(line))
+                || strlen(LF) != BIO_write(bio, LF, strlen(LF)) )
+    {
+        fprintf(stderr, "wire keylog file error\n");
+		BIO_free(bio);
+        return;
+    }
+
+    BIO_free(bio);
+}
 void net__broker_cleanup(void)
 {
 	if(spare_sock != INVALID_SOCKET){
@@ -243,8 +262,8 @@ struct mosquitto *net__socket_accept(struct mosquitto__listener_sock *listensock
 	if(db.config->connection_messages == true){
 		log__printf(NULL, MOSQ_LOG_NOTICE, "New connection from %s:%d on port %d.",
 				new_context->address, new_context->remote_port, new_context->listener->port);
+		
 	}
-
 	return new_context;
 }
 
@@ -329,37 +348,14 @@ int net__tls_server_ctx(struct mosquitto__listener *listener)
 		return MOSQ_ERR_TLS;
 	}
 
-	if(listener->tls_version == NULL){
-		SSL_CTX_set_options(listener->ssl_ctx, SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1);
-#ifdef SSL_OP_NO_TLSv1_3
-	}else if(!strcmp(listener->tls_version, "tlsv1.3")){
-		SSL_CTX_set_options(listener->ssl_ctx, SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1 | SSL_OP_NO_TLSv1_1 | SSL_OP_NO_TLSv1_2);
-	}else if(!strcmp(listener->tls_version, "tlsv1.2")){
-		SSL_CTX_set_options(listener->ssl_ctx, SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1 | SSL_OP_NO_TLSv1_1);
-	}else if(!strcmp(listener->tls_version, "tlsv1.1")){
-		SSL_CTX_set_options(listener->ssl_ctx, SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1);
-#else
-	}else if(!strcmp(listener->tls_version, "tlsv1.2")){
-		SSL_CTX_set_options(listener->ssl_ctx, SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1 | SSL_OP_NO_TLSv1_1);
-	}else if(!strcmp(listener->tls_version, "tlsv1.1")){
-		SSL_CTX_set_options(listener->ssl_ctx, SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1);
-#endif
-	}else{
-		log__printf(NULL, MOSQ_LOG_ERR, "Error: Unsupported tls_version \"%s\".", listener->tls_version);
-		return MOSQ_ERR_TLS;
-	}
-	/* Use a new key when using temporary/ephemeral DH parameters.
-	 * This shouldn't be necessary, but we can't guarantee that `dhparam` has
-	 * been generated using strong primes.
-	 */
-	SSL_CTX_set_options(listener->ssl_ctx, SSL_OP_SINGLE_DH_USE);
 
 #ifdef SSL_OP_NO_COMPRESSION
 	/* Disable compression */
 	SSL_CTX_set_options(listener->ssl_ctx, SSL_OP_NO_COMPRESSION);
 #endif
+/* Server chooses cipher */
+
 #ifdef SSL_OP_CIPHER_SERVER_PREFERENCE
-	/* Server chooses cipher */
 	SSL_CTX_set_options(listener->ssl_ctx, SSL_OP_CIPHER_SERVER_PREFERENCE);
 #endif
 
@@ -367,61 +363,15 @@ int net__tls_server_ctx(struct mosquitto__listener *listener)
 	/* Use even less memory per SSL connection. */
 	SSL_CTX_set_mode(listener->ssl_ctx, SSL_MODE_RELEASE_BUFFERS);
 #endif
-
-#ifdef WITH_EC
-#if OPENSSL_VERSION_NUMBER >= 0x10002000L && OPENSSL_VERSION_NUMBER < 0x10100000L
-	SSL_CTX_set_ecdh_auto(listener->ssl_ctx, 1);
-#endif
-#endif
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
-	SSL_CTX_set_dh_auto(listener->ssl_ctx, 1);
-#endif
-
+/*
 #ifdef SSL_OP_NO_RENEGOTIATION
 	SSL_CTX_set_options(listener->ssl_ctx, SSL_OP_NO_RENEGOTIATION);
 #endif
-
+*/
+	SSL_CTX_set_keylog_callback(listener->ssl_ctx, keylog_cb);
 	snprintf(buf, 256, "mosquitto-%d", listener->port);
 	SSL_CTX_set_session_id_context(listener->ssl_ctx, (unsigned char *)buf, (unsigned int)strlen(buf));
-
-	if(listener->ciphers){
-		rc = SSL_CTX_set_cipher_list(listener->ssl_ctx, listener->ciphers);
-		if(rc == 0){
-			log__printf(NULL, MOSQ_LOG_ERR, "Error: Unable to set TLS ciphers. Check cipher list \"%s\".", listener->ciphers);
-			return MOSQ_ERR_TLS;
-		}
-	}else{
-		rc = SSL_CTX_set_cipher_list(listener->ssl_ctx, "DEFAULT:!aNULL:!eNULL:!LOW:!EXPORT:!SSLv2:@STRENGTH");
-		if(rc == 0){
-			log__printf(NULL, MOSQ_LOG_ERR, "Error: Unable to set TLS ciphers. Check cipher list \"%s\".", listener->ciphers);
-			return MOSQ_ERR_TLS;
-		}
-	}
-#if OPENSSL_VERSION_NUMBER >= 0x10101000 && !defined(LIBRESSL_VERSION_NUMBER)
-	if(listener->ciphers_tls13){
-		rc = SSL_CTX_set_ciphersuites(listener->ssl_ctx, listener->ciphers_tls13);
-		if(rc == 0){
-			log__printf(NULL, MOSQ_LOG_ERR, "Error: Unable to set TLS 1.3 ciphersuites. Check cipher_tls13 list \"%s\".", listener->ciphers_tls13);
-			return MOSQ_ERR_TLS;
-		}
-	}
-#endif
-
-	if(listener->dhparamfile){
-		dhparamfile = fopen(listener->dhparamfile, "r");
-		if(!dhparamfile){
-			log__printf(NULL, MOSQ_LOG_ERR, "Error loading dhparamfile \"%s\".", listener->dhparamfile);
-			return MOSQ_ERR_TLS;
-		}
-		dhparam = PEM_read_DHparams(dhparamfile, NULL, NULL, NULL);
-		fclose(dhparamfile);
-
-		if(dhparam == NULL || SSL_CTX_set_tmp_dh(listener->ssl_ctx, dhparam) != 1){
-			log__printf(NULL, MOSQ_LOG_ERR, "Error loading dhparamfile \"%s\".", listener->dhparamfile);
-			net__print_ssl_error(NULL);
-			return MOSQ_ERR_TLS;
-		}
-	}
+	SSL_CTX_set_keylog_callback(listener->ssl_ctx, keylog_cb);
 	return MOSQ_ERR_SUCCESS;
 }
 #endif
@@ -453,31 +403,40 @@ static int net__load_crl_file(struct mosquitto__listener *listener)
 
 	return MOSQ_ERR_SUCCESS;
 }
-
-
-int net__load_certificates(struct mosquitto__listener *listener)
+static int net__load_engine(struct mosquitto__listener *listener,char *f)
 {
-#ifdef WITH_TLS
+#if defined(WITH_TLS) && !defined(OPENSSL_NO_ENGINE)
+	ENGINE *engine = NULL;
+	UI_METHOD *ui_method = NULL;
+	EVP_PKEY *pkey;
 	int rc;
 
-	if(listener->require_certificate){
-		SSL_CTX_set_verify(listener->ssl_ctx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, client_certificate_verify);
-	}else{
-		SSL_CTX_set_verify(listener->ssl_ctx, SSL_VERIFY_NONE, client_certificate_verify);
+	if(!listener->tls_engine){
+		return MOSQ_ERR_SUCCESS;
 	}
-	rc = SSL_CTX_use_certificate_chain_file(listener->ssl_ctx, listener->certfile);
-	if(rc != 1){
-		log__printf(NULL, MOSQ_LOG_ERR, "Error: Unable to load server certificate \"%s\". Check certfile.", listener->certfile);
+
+	engine = ENGINE_by_id(listener->tls_engine);
+	if(!engine){
+		log__printf(NULL, MOSQ_LOG_ERR, "Error loading %s engine\n", listener->tls_engine);
 		net__print_ssl_error(NULL);
 		return MOSQ_ERR_TLS;
 	}
-	if(listener->tls_engine == NULL){
-		rc = SSL_CTX_use_PrivateKey_file(listener->ssl_ctx, listener->keyfile, SSL_FILETYPE_PEM);
-		if(rc != 1){
-			log__printf(NULL, MOSQ_LOG_ERR, "Error: Unable to load server key file \"%s\". Check keyfile.", listener->keyfile);
-			net__print_ssl_error(NULL);
-			return MOSQ_ERR_TLS;
-		}
+	if(!ENGINE_init(engine)){
+		log__printf(NULL, MOSQ_LOG_ERR, "Failed engine initialisation\n");
+		net__print_ssl_error(NULL);
+		return MOSQ_ERR_TLS;
+	}
+	//ENGINE_set_default(engine, ENGINE_METHOD_ALL);
+	pkey = ENGINE_load_private_key(engine, f, ui_method, NULL);
+	if(!pkey){
+		log__printf(NULL, MOSQ_LOG_ERR, "Error: Unable to load engine private key file \"%s\".", f);
+		net__print_ssl_error(NULL);
+		return MOSQ_ERR_TLS;
+	}
+	if(SSL_CTX_use_PrivateKey(listener->ssl_ctx, pkey) <= 0){
+		log__printf(NULL, MOSQ_LOG_ERR, "Error: Unable to use engine private key file \"%s\".", f);
+		net__print_ssl_error(NULL);
+		return MOSQ_ERR_TLS;
 	}
 	rc = SSL_CTX_check_private_key(listener->ssl_ctx);
 	if(rc != 1){
@@ -485,6 +444,87 @@ int net__load_certificates(struct mosquitto__listener *listener)
 		net__print_ssl_error(NULL);
 		return MOSQ_ERR_TLS;
 	}
+	ENGINE_free(engine); 
+#endif
+	return MOSQ_ERR_SUCCESS;
+}
+
+int net__load_certificates(struct mosquitto__listener *listener)
+{
+#ifdef WITH_TLS
+	int rc;
+	if(listener->require_certificate){
+		SSL_CTX_set_verify(listener->ssl_ctx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, NULL);
+	}else{
+		SSL_CTX_set_verify(listener->ssl_ctx, SSL_VERIFY_NONE, NULL);
+	}
+	SSL_CTX_set_verify_depth(listener->ssl_ctx, 1);
+	rc = SSL_CTX_use_certificate_file(listener->ssl_ctx, listener->certfile, SSL_FILETYPE_PEM);
+	if(rc != 1){
+		log__printf(NULL, MOSQ_LOG_ERR, "Error: Unable to load server certificate \"%s\". Check certfile.", listener->certfile);
+		net__print_ssl_error(NULL);
+		return MOSQ_ERR_TLS;
+	}
+	
+	if(listener->tls_engine == NULL ){
+		/* Load common private key file*/
+		if(listener->keyfile){
+            BIO *in = NULL;
+			EVP_PKEY *pkey = NULL;
+            in = BIO_new(BIO_s_file());
+            if(in==NULL)
+				return MOSQ_ERR_TLS;
+            BIO_read_filename(in, listener->keyfile);
+            //RETURN_SSL(err);
+            pkey = PEM_read_bio_PrivateKey(in, NULL, NULL, NULL);
+            if(pkey==NULL)
+				return MOSQ_ERR_TLS;
+            BIO_free(in);
+			SSL_CTX_use_PrivateKey(listener->ssl_ctx, pkey);
+			rc = SSL_CTX_check_private_key(listener->ssl_ctx);
+			if(rc != 1){
+				log__printf(NULL, MOSQ_LOG_ERR, "Error: Server certificate/key are inconsistent.");
+				net__print_ssl_error(NULL);
+				return MOSQ_ERR_TLS;
+			}
+		}
+	}
+	else
+		net__load_engine(listener,listener->keyfile);		
+	
+	rc = SSL_CTX_use_enc_certificate_file(listener->ssl_ctx, listener->enc_certfile, SSL_FILETYPE_PEM);
+	if(rc != 1){
+		log__printf(NULL, MOSQ_LOG_ERR, "Error: Unable to load server enc_certificate \"%s\". Check certfile.", listener->enc_certfile);
+		net__print_ssl_error(NULL);
+		return MOSQ_ERR_TLS;
+	}
+	
+	if(listener->tls_engine == NULL ){
+		/* Load common private key file*/
+		if(listener->enc_keyfile){
+            BIO *in = NULL;
+			EVP_PKEY *pkey = NULL;
+            in = BIO_new(BIO_s_file());
+            if(in==NULL)
+				return MOSQ_ERR_TLS;
+            BIO_read_filename(in, listener->enc_keyfile);
+            //RETURN_SSL(err);
+            pkey = PEM_read_bio_PrivateKey(in, NULL, NULL, NULL);
+            if(pkey==NULL)
+				return MOSQ_ERR_TLS;
+            BIO_free(in);
+			SSL_CTX_use_enc_PrivateKey(listener->ssl_ctx, pkey);
+			rc = SSL_CTX_check_enc_private_key(listener->ssl_ctx);
+			if(rc != 1){
+				log__printf(NULL, MOSQ_LOG_ERR, "Error: Server certificate/key are inconsistent.");
+				net__print_ssl_error(NULL);
+				return MOSQ_ERR_TLS;
+			}
+		}
+	}
+	else
+		net__load_engine(listener,listener->enc_keyfile);
+	
 	/* Load CRLs if they exist. */
 	if(listener->crlfile){
 		rc = net__load_crl_file(listener);
@@ -497,6 +537,7 @@ int net__load_certificates(struct mosquitto__listener *listener)
 }
 
 
+/*
 static int net__load_engine(struct mosquitto__listener *listener)
 {
 #if defined(WITH_TLS) && !defined(OPENSSL_NO_ENGINE)
@@ -548,12 +589,12 @@ static int net__load_engine(struct mosquitto__listener *listener)
 			return MOSQ_ERR_TLS;
 		}
 	}
-	ENGINE_free(engine); /* release the structural reference from ENGINE_by_id() */
+	ENGINE_free(engine); 
 #endif
 
 	return MOSQ_ERR_SUCCESS;
 }
-
+*/
 
 int net__tls_load_verify(struct mosquitto__listener *listener)
 {
@@ -592,9 +633,9 @@ int net__tls_load_verify(struct mosquitto__listener *listener)
 	}
 #endif
 
-	if(net__load_engine(listener)){
-		return MOSQ_ERR_TLS;
-	}
+	//if(net__load_engine(listener)){
+	//	return MOSQ_ERR_TLS;
+	//}
 #endif
 	return net__load_certificates(listener);
 }

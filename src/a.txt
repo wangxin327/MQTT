@@ -1,0 +1,132 @@
+./control.c:	mosquitto_property *properties = NULL;
+./control.c:				mosquitto_property_add_string(&properties, MQTT_PROP_REASON_STRING, event_data.reason_string);
+./control.c:	mosquitto_property_free_all(&properties);
+./database.c:	mosquitto_property_free_all(&store->properties);
+./database.c:	mosquitto_property_free_all(&item->properties);
+./database.c:int db__message_insert(struct mosquitto *context, uint16_t mid, enum mosquitto_msg_direction dir, uint8_t qos, bool retain, struct mosquitto_msg_store *stored, mosquitto_property *properties, bool update)
+./database.c:				mosquitto_property_free_all(&properties);
+./database.c:				mosquitto_property_free_all(&properties);
+./database.c:					mosquitto_property_free_all(&properties);
+./database.c:			mosquitto_property_free_all(&properties);
+./database.c:					mosquitto_property_free_all(&properties);
+./database.c:			mosquitto_property_free_all(&properties);
+./database.c:			mosquitto_property_free_all(&properties);
+./database.c:		mosquitto_property_free_all(&tail->properties);
+./database.c:int db__messages_easy_queue(struct mosquitto *context, const char *topic, uint8_t qos, uint32_t payloadlen, const void *payload, int retain, uint32_t message_expiry_interval, mosquitto_property **properties)
+./database.c://int db__message_store(const struct mosquitto *source, uint16_t source_mid, char *topic, int qos, uint32_t payloadlen, mosquitto__payload_uhpa *payload, int retain, struct mosquitto_msg_store **stored, uint32_t message_expiry_interval, mosquitto_property *properties, dbid_t store_id, enum mosquitto_msg_origin origin)
+./database.c:	mosquitto_property *cmsg_props = NULL, *store_props = NULL;
+./handle_auth.c:	mosquitto_property *properties = NULL;
+./handle_auth.c:		if(mosquitto_property_read_string(properties, MQTT_PROP_AUTHENTICATION_METHOD, &auth_method, false) == NULL){
+./handle_auth.c:			mosquitto_property_free_all(&properties);
+./handle_auth.c:			mosquitto_property_free_all(&properties);
+./handle_auth.c:		mosquitto_property_read_binary(properties, MQTT_PROP_AUTHENTICATION_DATA, &auth_data, &auth_data_len, false);
+./handle_auth.c:		mosquitto_property_free_all(&properties); /* FIXME - TEMPORARY UNTIL PROPERTIES PROCESSED */
+./handle_connack.c:	mosquitto_property *properties = NULL;
+./handle_connack.c:		mosquitto_property_read_byte(properties, MQTT_PROP_MAXIMUM_QOS,
+./handle_connack.c:		if(mosquitto_property_read_int32(properties, MQTT_PROP_MAXIMUM_PACKET_SIZE,
+./handle_connack.c:		mosquitto_property_read_int16(properties, MQTT_PROP_RECEIVE_MAXIMUM,
+./handle_connack.c:		if(mosquitto_property_read_byte(properties, MQTT_PROP_RETAIN_AVAILABLE,
+./handle_connack.c:		if(mosquitto_property_read_int16(properties, MQTT_PROP_SERVER_KEEP_ALIVE,
+./handle_connack.c:		mosquitto_property_free_all(&properties);
+./handle_connack.c:	mosquitto_property_free_all(&properties); /* FIXME - TEMPORARY UNTIL PROPERTIES PROCESSED */
+./handle_connect.c:				mosquitto_property_free_all(&msg_tail->properties);
+./handle_connect.c:	mosquitto_property *connack_props = NULL;
+./handle_connect.c:			if(mosquitto_property_add_int16(&connack_props, MQTT_PROP_TOPIC_ALIAS_MAXIMUM, context->listener->max_topic_alias)){
+./handle_connect.c:			if(mosquitto_property_add_int16(&connack_props, MQTT_PROP_SERVER_KEEP_ALIVE, context->keepalive)){
+./handle_connect.c:			if(mosquitto_property_add_string(&connack_props, MQTT_PROP_ASSIGNED_CLIENT_IDENTIFIER, context->id)){
+./handle_connect.c:			if(mosquitto_property_add_string(&connack_props, MQTT_PROP_AUTHENTICATION_METHOD, context->auth_method)){
+./handle_connect.c:				if(mosquitto_property_add_binary(&connack_props, MQTT_PROP_AUTHENTICATION_DATA, auth_data_out, auth_data_out_len)){
+./handle_connect.c:	mosquitto_property_free_all(&connack_props);
+./handle_connect.c:	mosquitto_property_free_all(&connack_props);
+./handle_connect.c:	mosquitto_property *properties = NULL;
+./handle_connect.c:		mosquitto_property_free_all(&properties);
+./handle_connect.c:		mosquitto_property_free_all(&will_struct->properties);
+./handle_connect.c:	mosquitto_property *properties = NULL;
+./handle_connect.c:	if(mosquitto_property_read_string(properties, MQTT_PROP_AUTHENTICATION_METHOD, &context->auth_method, false)){
+./handle_connect.c:		mosquitto_property_read_binary(properties, MQTT_PROP_AUTHENTICATION_DATA, &auth_data, &auth_data_len, false);
+./handle_connect.c:	mosquitto_property_free_all(&properties); /* FIXME - TEMPORARY UNTIL PROPERTIES PROCESSED */
+./handle_connect.c:		mosquitto_property_free_all(&will_struct->properties);
+./handle_disconnect.c:	mosquitto_property *properties = NULL;
+./handle_disconnect.c:		mosquitto_property_free_all(&properties);
+./handle_disconnect.c:	mosquitto_property_free_all(&properties); /* FIXME - TEMPORARY UNTIL PROPERTIES PROCESSED */
+./handle_publish.c:	mosquitto_property *properties = NULL;
+./handle_publish.c:	mosquitto_property *p, *p_prev;
+./handle_publish.c:	mosquitto_property *msg_properties_last;
+./handle_publish.c:	mosquitto_property_free_all(&properties);
+./handle_subscribe.c:	mosquitto_property *properties = NULL;
+./handle_subscribe.c:		if(mosquitto_property_read_varint(properties, MQTT_PROP_SUBSCRIPTION_IDENTIFIER,
+./handle_subscribe.c:				mosquitto_property_free_all(&properties);
+./handle_subscribe.c:		mosquitto_property_free_all(&properties);
+./handle_unsubscribe.c:	mosquitto_property *properties = NULL;
+./handle_unsubscribe.c:		mosquitto_property_free_all(&properties);
+./linker-macosx.syms:_mosquitto_property_add_binary
+./linker-macosx.syms:_mosquitto_property_add_byte
+./linker-macosx.syms:_mosquitto_property_add_int16
+./linker-macosx.syms:_mosquitto_property_add_int32
+./linker-macosx.syms:_mosquitto_property_add_string
+./linker-macosx.syms:_mosquitto_property_add_string_pair
+./linker-macosx.syms:_mosquitto_property_add_varint
+./linker-macosx.syms:_mosquitto_property_free_all
+./linker.syms:	mosquitto_property_add_binary;
+./linker.syms:	mosquitto_property_add_byte;
+./linker.syms:	mosquitto_property_add_int16;
+./linker.syms:	mosquitto_property_add_int32;
+./linker.syms:	mosquitto_property_add_string;
+./linker.syms:	mosquitto_property_add_string_pair;
+./linker.syms:	mosquitto_property_add_varint;
+./linker.syms:	mosquitto_property_free_all;
+./loop.c:static void read_message_expiry_interval(mosquitto_property **proplist, uint32_t *message_expiry)
+./loop.c:	mosquitto_property *p, *previous = NULL;
+./loop.c:		mosquitto_property_free_all(&msg->properties);
+./mosquitto_broker_internal.h:	mosquitto_property *properties;
+./mosquitto_broker_internal.h:	mosquitto_property *properties;
+./mosquitto_broker_internal.h:	mosquitto_property *properties;
+./mosquitto_broker_internal.h:int send__connack(struct mosquitto *context, uint8_t ack, uint8_t reason_code, const mosquitto_property *properties);
+./mosquitto_broker_internal.h:int send__unsuback(struct mosquitto *context, uint16_t mid, int reason_code_count, uint8_t *reason_codes, const mosquitto_property *properties);
+./mosquitto_broker_internal.h:int db__message_insert(struct mosquitto *context, uint16_t mid, enum mosquitto_msg_direction dir, uint8_t qos, bool retain, struct mosquitto_msg_store *stored, mosquitto_property *properties, bool update);
+./mosquitto_broker_internal.h:int db__messages_easy_queue(struct mosquitto *context, const char *topic, uint8_t qos, uint32_t payloadlen, const void *payload, int retain, uint32_t message_expiry_interval, mosquitto_property **properties);
+./mosquitto_broker_internal.h:int property__process_connect(struct mosquitto *context, mosquitto_property **props);
+./mosquitto_broker_internal.h:int property__process_will(struct mosquitto *context, struct mosquitto_message_all *msg, mosquitto_property **props);
+./mosquitto_broker_internal.h:int property__process_disconnect(struct mosquitto *context, mosquitto_property **props);
+./persist.h:	mosquitto_property *properties;
+./persist.h:	mosquitto_property *properties;
+./persist_read_v5.c:	mosquitto_property *properties = NULL;
+./persist_read_v5.c:	mosquitto_property *properties = NULL;
+./plugin_public.c:		mosquitto_property *properties)
+./plugin_public.c:		mosquitto_property *properties)
+./property_broker.c:int property__process_connect(struct mosquitto *context, mosquitto_property **props)
+./property_broker.c:	mosquitto_property *p;
+./property_broker.c:int property__process_will(struct mosquitto *context, struct mosquitto_message_all *msg, mosquitto_property **props)
+./property_broker.c:	mosquitto_property *p, *p_prev;
+./property_broker.c:	mosquitto_property *msg_properties, *msg_properties_last;
+./property_broker.c:int property__process_disconnect(struct mosquitto *context, mosquitto_property **props)
+./property_broker.c:	mosquitto_property *p;
+./retain.c:	mosquitto_property *properties = NULL;
+./retain.c:		mosquitto_property_add_varint(&properties, MQTT_PROP_SUBSCRIPTION_IDENTIFIER, subscription_identifier);
+./send_auth.c:	mosquitto_property *properties = NULL;
+./send_auth.c:	rc = mosquitto_property_add_string(&properties, MQTT_PROP_AUTHENTICATION_METHOD, context->auth_method);
+./send_auth.c:		mosquitto_property_free_all(&properties);
+./send_auth.c:		rc = mosquitto_property_add_binary(&properties, MQTT_PROP_AUTHENTICATION_DATA, auth_data, auth_data_len);
+./send_auth.c:			mosquitto_property_free_all(&properties);
+./send_auth.c:		mosquitto_property_free_all(&properties);
+./send_auth.c:		mosquitto_property_free_all(&properties);
+./send_auth.c:	mosquitto_property_free_all(&properties);
+./send_connack.c:int send__connack(struct mosquitto *context, uint8_t ack, uint8_t reason_code, const mosquitto_property *properties)
+./send_connack.c:	mosquitto_property *connack_props = NULL;
+./send_connack.c:	rc = mosquitto_property_copy_all(&connack_props, properties);
+./send_connack.c:			rc = mosquitto_property_add_byte(&connack_props, MQTT_PROP_RETAIN_AVAILABLE, 0);
+./send_connack.c:				mosquitto_property_free_all(&connack_props);
+./send_connack.c:			rc = mosquitto_property_add_int32(&connack_props, MQTT_PROP_MAXIMUM_PACKET_SIZE, db.config->max_packet_size);
+./send_connack.c:				mosquitto_property_free_all(&connack_props);
+./send_connack.c:			rc = mosquitto_property_add_int16(&connack_props, MQTT_PROP_RECEIVE_MAXIMUM, db.config->max_inflight_messages);
+./send_connack.c:				mosquitto_property_free_all(&connack_props);
+./send_connack.c:			rc = mosquitto_property_add_byte(&connack_props, MQTT_PROP_MAXIMUM_QOS, context->listener->max_qos);
+./send_connack.c:				mosquitto_property_free_all(&connack_props);
+./send_connack.c:		mosquitto_property_free_all(&connack_props);
+./send_connack.c:		mosquitto_property_free_all(&connack_props);
+./send_connack.c:		mosquitto_property_free_all(&connack_props);
+./send_connack.c:	mosquitto_property_free_all(&connack_props);
+./send_suback.c:	mosquitto_property *properties = NULL;
+./send_unsuback.c:int send__unsuback(struct mosquitto *mosq, uint16_t mid, int reason_code_count, uint8_t *reason_codes, const mosquitto_property *properties)
+./subs.c:	mosquitto_property *properties = NULL;
+./subs.c:			mosquitto_property_add_varint(&properties, MQTT_PROP_SUBSCRIPTION_IDENTIFIER, leaf->identifier);

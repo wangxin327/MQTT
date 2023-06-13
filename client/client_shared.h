@@ -82,6 +82,8 @@ struct mosq_config {
 	char *capath;
 	char *certfile;
 	char *keyfile;
+	char *enc_certfile;
+	char *enc_keyfile;
 	char *ciphers;
 	bool insecure;
 	char *tls_alpn;

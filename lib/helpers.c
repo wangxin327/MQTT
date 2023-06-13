@@ -192,7 +192,7 @@ libmosq_EXPORT int mosquitto_subscribe_callback(
 		}
 	}
 	if(tls){
-		rc = mosquitto_tls_set(mosq, tls->cafile, tls->capath, tls->certfile, tls->keyfile, tls->pw_callback);
+		rc = mosquitto_tls_set(mosq, tls->cafile, tls->capath, tls->certfile, tls->keyfile, tls->enc_certfile,tls->enc_keyfile,tls->pw_callback);
 		if(rc){
 			mosquitto_destroy(mosq);
 			return rc;

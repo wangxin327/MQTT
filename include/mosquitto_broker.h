@@ -40,7 +40,11 @@ extern "C" {
 #include <time.h>
 
 struct mosquitto;
+
+#ifndef CHONGTU
+#define CHONGTU
 typedef struct mqtt5__property mosquitto_property;
+#endif
 
 enum mosquitto_protocol {
 	mp_mqtt,

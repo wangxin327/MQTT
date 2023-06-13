@@ -269,6 +269,8 @@ void mosquitto__destroy(struct mosquitto *mosq)
 	mosquitto__free(mosq->tls_capath);
 	mosquitto__free(mosq->tls_certfile);
 	mosquitto__free(mosq->tls_keyfile);
+	mosquitto__free(mosq->tls_enc_certfile);
+	mosquitto__free(mosq->tls_enc_keyfile);
 	if(mosq->tls_pw_callback) mosq->tls_pw_callback = NULL;
 	mosquitto__free(mosq->tls_version);
 	mosquitto__free(mosq->tls_ciphers);

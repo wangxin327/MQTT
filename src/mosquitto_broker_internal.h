@@ -99,7 +99,7 @@ struct mosquitto__auth_plugin{
 	void *lib;
 	void *user_data;
 	int (*plugin_version)(void);
-	struct mosquitto_plugin_id_t *identifier;
+	mosquitto_plugin_id_t *identifier;
 
 	FUNC_plugin_init_v5 plugin_init_v5;
 	FUNC_plugin_cleanup_v5 plugin_cleanup_v5;
@@ -213,6 +213,8 @@ struct mosquitto__listener {
 	char *capath;
 	char *certfile;
 	char *keyfile;
+	char *enc_certfile;
+	char *enc_keyfile;
 	char *tls_engine;
 	char *tls_engine_kpass_sha1;
 	char *ciphers;
@@ -248,10 +250,9 @@ struct mosquitto__listener_sock{
 	mosq_sock_t sock;
 	struct mosquitto__listener *listener;
 };
-
-typedef struct mosquitto_plugin_id_t{
+struct mosquitto_plugin_id_t{
 	struct mosquitto__listener *listener;
-} mosquitto_plugin_id_t;
+};
 
 struct mosquitto__config {
 	bool allow_duplicate_messages;
@@ -550,6 +551,8 @@ struct mosquitto__bridge{
 	char *tls_capath;
 	char *tls_certfile;
 	char *tls_keyfile;
+	char * tls_enc_certfile;
+	char * tls_enc_keyfile;
 	char *tls_version;
 	char *tls_alpn;
 #  ifdef FINAL_WITH_TLS_PSK
